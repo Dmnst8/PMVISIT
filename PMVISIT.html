@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تحويل الصور إلى PDF</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body {font-family: Arial; text-align:center; direction:rtl; padding:30px; background:#f5f5f5;}
+.box {background:white; padding:20px; border-radius:10px; max-width:400px; margin:auto;}
+button {padding:10px 20px; background:black; color:white; border:none; border-radius:5px;}
+input {margin:10px 0;}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>تحويل الصور إلى PDF</h2>
+
+<input type="text" id="name" placeholder="اسم الملف"><br>
+<input type="file" id="imgs" multiple accept="image/*"><br>
+
+<button onclick="makePDF()">تحويل</button>
+</div>
+
+<script>
+async function makePDF(){
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF();
+
+const files = document.getElementById("imgs").files;
+const name = document.getElementById("name").value || "ملف";
+
+if(files.length < 2){
+alert("لازم تختار صورتين على الأقل");
+return;
+}
+
+for(let i=0;i<files.length;i++){
+const data = await toBase64(files[i]);
+
+const img = new Image();
+img.src = data;
+
+await new Promise(r=>{
+img.onload=()=>{
+const w = pdf.internal.pageSize.getWidth();
+const h = (img.height*w)/img.width;
+
+if(i>0) pdf.addPage();
+pdf.addImage(img,'JPEG',0,0,w,h);
+r();
+}
+});
+}
+
+pdf.save(name+".pdf");
+}
+
+function toBase64(file){
+return new Promise(r=>{
+const reader = new FileReader();
+reader.onload=e=>r(e.target.result);
+reader.readAsDataURL(file);
+});
+}
+</script>
+
+</body>
+</html>
